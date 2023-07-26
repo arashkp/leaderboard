@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-Route::get('users', [UserController::class, 'index']);
+Route::get('/', [UserController::class, 'index']);
+Route::post('/update', [UserController::class, 'update'])->name('update-points');
+//Route::inertia('about', 'About');
