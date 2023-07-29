@@ -2,37 +2,52 @@
   <div class="dark p-6">
     <div class="grid grid-cols-6 gap-4 mb-4">
     <div class="col-span-5"><h2 class="text-5xl dark:text-white font-bold">Leaderboard</h2></div>
-    <div><button @click="addUser" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded float-right">+ Add User</button></div>
+    <div><button @click="showAddUserModal = true" class="bg-green-600 hover:bg-green-400 text-white font-bold py-2 px-4 rounded float-right">+ Add User</button></div>
+    <AddUser v-if="showAddUserModal" @add-user="handleAddUser" @close-modal="closeAddUserModal"
+    :error="error" />
+    <div class="col-span-3"><input type="text" v-model="searchTerm" @input="filterByName" placeholder="Search by name" class="w-full px-4 py-2 border rounded-md dark:bg-gray-800 dark:text-white">
+    </div>
   </div>
     <table class="w-full dark:bg-gray-800">
       <thead>
         <tr>
+          <th class="dark:text-white w-20 p-4">#</th>
+          <th @click="sortByName" class="cursor-pointer dark:text-white">
+          Name
+          <span v-if="sortField === 'name' && sortOrder === 'asc'" class="dark:text-white">↑</span>
+          <span v-if="sortField === 'name' && sortOrder === 'desc'" class="dark:text-white">↓</span>
+        </th>
+        <th @click="sortByPoints" class="cursor-pointer dark:text-white">
+      Points
+      <span v-if="sortField === 'points'" class="dark:text-white">↑</span>
+    </th>
           <th class="dark:text-white">Action</th>
-          <th class="dark:text-white p-5">Name</th>
-          <th class="dark:text-white">Points</th>
         </tr>
       </thead>
       <tbody class="text-center">
         <tr v-for="(user, index) in sortedUsers" :key="index" :class="index % 2 === 0 ? 'bg-gray-100 dark:bg-gray-700' : ''">
-          <td>
-            <button @click="deleteUser(index)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">X</button>
-          </td>
-          <td class="dark:text-white p-5">{{ user.name }}</td>
+          <td class="dark:text-white">{{ index + 1 }}</td>
+          <td class="dark:text-white p-5 cursor-pointer" @click="showUserDetails(user)">{{ user.name }}</td>
           <td class="dark:text-white">
-            <button @click="incrementPoints(index)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">+</button>
+            <button @click="updatePoints(index, +1)" class="bg-green-700 hover:bg-green-400 text-white font-bold py-1 px-2 rounded">+</button>
             <span class="ml-3 mr-3">{{ user.points }}</span>
-            <button @click="decrementPoints(index)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">-</button>
+            <button @click="updatePoints(index, -1)" class="bg-rose-700 hover:bg-rose-400 text-white font-bold py-1 px-2 rounded">-</button>
+          </td>
+          <td>
+            <button @click="deleteUser(user)" class="bg-rose-500 hover:bg-rose-300 text-white font-bold py-1 px-2 rounded">X</button>
           </td>
         </tr>
       </tbody>
     </table>
-    
+    <UserDetails v-if="showUserDetailsModal" :user="selectedUser" @close-modal="showUserDetailsModal = false" />
   </div>
 </template>
 
 
 <script>
-import { router } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3';
+import UserDetails from './UserDetails.vue';
+import AddUser from './AddUser.vue';
 
 export default {
   props: {
@@ -41,47 +56,121 @@ export default {
       required: true,
     },
   },
+
+  components: {
+    AddUser,
+    UserDetails,
+  },
+  
+  data() {
+    return {
+      showModal: false,
+      showUserDetailsModal: false,
+      selectedUser: null,
+      showAddUserModal: false,
+      error: null,
+      sortField: '',
+      sortOrder: 'asc',
+      searchTerm: '',
+    };
+  },
+
   computed: {
     sortedUsers() {
-      return this.sortUsersByPoints();
+      return this.sortUsers();
     },
   },
+
   methods: {
-    sortUsersByPoints() {
-      const usersArray = Object.values(this.users);
-      return usersArray.sort((a, b) => b.points - a.points);
+
+    sortByName() {
+      this.sortField = 'name';
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      this.sortedUsers = this.sortUsers();
     },
-    async incrementPoints(index) {
+
+    sortByPoints() {
+      this.sortField = 'points';
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      this.sortedUsers = this.sortUsers();
+    },
+
+    sortUsers() {
+      const order = this.sortOrder === 'asc' ? 1 : -1;
+      return [...this.users].sort((a, b) => (a[this.sortField] > b[this.sortField] ? order : -order));
+    },
+
+    async updatePoints(index, point) {
       const user = this.sortedUsers[index];
-      user.points++;
-      router.post('/update', {
+      user.points += point;
+      router.put('/update', {
         userId: user.id,
         points: user.points,
       });
     },
-    async decrementPoints(index) {
-      const user = this.sortedUsers[index];
-      user.points--;
-      router.post('/update', {
-        userId: user.id,
-        points: user.points,
-      });
+
+    filterByName() {
+      this.sortedUsers = this.sortUsers().filter((user) => user.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
     },
-    deleteUser(index) {
-      const user = this.sortedUsers[index];
-      this.$delete(this.users, user.id);
+
+    async deleteUser (user) {
+      let userId = user.id;
+      if (confirm('Are you sure you want to delete user "' + user.name + '"?')) {
+        router.delete(`/users/${userId}`, {
+          onSuccess: () => {
+            const index = this.users.findIndex((user) => user.id === userId);
+            if (index !== -1) {
+              this.users.splice(index, 1);
+            }
+          },
+          onError: (errors) => {
+            error.value = errors;
+            console.log(errors);
+          },
+        });
+      }
     },
-    addUser() {
-      const newUser = {
-        name: 'New User',
-        age: 0,
-        points: 0,
-        address: 'New Address',
-      };
-      // Generate a unique ID for the new user (you can use a UUID library here)
-      const newUserId = Math.random().toString(36).substr(2, 9);
-      this.$set(this.users, newUserId, newUser);
+
+    showUserDetails(user) {
+      this.selectedUser = user;
+      this.showUserDetailsModal = true;
     },
+
+    openModal() {
+      this.showModal = true;
+    },
+
+    async handleAddUser(newUser) {
+      try {
+        router.post('/users', newUser, {
+          onSuccess: () => {
+            this.showAddUserModal = false;
+	        },
+          onError: (errors) => {
+            this.error = this.convertErrorMesssageToText(errors);
+          }
+        });
+      } catch (error) {
+        if (error.response && error.response.status === 422) {
+          this.error = error.response.data.errors.name[0];
+        } else {
+          this.error = 'An error occurred while creating the user.';
+        }
+      }
+    },
+
+    convertErrorMesssageToText (errors) {
+      let errorMessage = '';
+      for (const key in errors) {
+        errorMessage += 'Issue in `' + key + '`: ' + errors[key] + ' ';
+      }
+      return errorMessage;
+    },
+
+    closeAddUserModal() {
+      this.showAddUserModal = false;
+    },
+
   },
 };
 </script>

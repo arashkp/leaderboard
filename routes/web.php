@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [UserController::class, 'index']);
-Route::post('/update', [UserController::class, 'update'])->name('update-points');
-//Route::inertia('about', 'About');
+Route::get('/', [UserController::class, 'index'])->name('index');
+Route::put('/update', [UserController::class, 'update'])->name('update');
+Route::post('/users', [UserController::class, 'store'])->name('store');
+Route::delete('/users/{user}', [UserController::class, 'delete'])->name('delete');
