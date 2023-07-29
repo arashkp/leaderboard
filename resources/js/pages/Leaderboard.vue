@@ -5,7 +5,7 @@
     <div><button @click="showAddUserModal = true" class="bg-green-600 hover:bg-green-400 text-white font-bold py-2 px-4 rounded float-right">+ Add User</button></div>
     <AddUser v-if="showAddUserModal" @add-user="handleAddUser" @close-modal="closeAddUserModal"
     :error="error" />
-    <div class="col-span-3"><input type="text" v-model="searchTerm" @input="filterByName" placeholder="Search by name" class="w-full px-4 py-2 border rounded-md dark:bg-gray-800 dark:text-white">
+    <div class="col-span-3"><input type="text" v-model="searchTerm" @input="filterByName" placeholder="Search by Name" class="w-full px-4 py-2 border rounded-md dark:bg-gray-800 dark:text-white">
     </div>
   </div>
     <table class="w-full dark:bg-gray-800">
@@ -19,7 +19,8 @@
         </th>
         <th @click="sortByPoints" class="cursor-pointer dark:text-white">
       Points
-      <span v-if="sortField === 'points'" class="dark:text-white">↑</span>
+      <span v-if="sortField === 'points' && sortOrder === 'asc'" class="dark:text-white">↑</span>
+      <span v-if="sortField === 'points' && sortOrder === 'desc'" class="dark:text-white">↓</span>
     </th>
           <th class="dark:text-white">Action</th>
         </tr>
@@ -69,16 +70,16 @@ export default {
       selectedUser: null,
       showAddUserModal: false,
       error: null,
-      sortField: '',
-      sortOrder: 'asc',
+      sortField: 'points',
+      sortOrder: 'desc',
       searchTerm: '',
     };
   },
 
   computed: {
     sortedUsers() {
-      return this.sortUsers();
-    },
+      return this.sortFilteredUsers();
+    }
   },
 
   methods: {
@@ -86,37 +87,36 @@ export default {
     sortByName() {
       this.sortField = 'name';
       this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-      this.sortedUsers = this.sortUsers();
     },
 
     sortByPoints() {
       this.sortField = 'points';
       this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-      this.sortedUsers = this.sortUsers();
     },
 
-    sortUsers() {
+    sortFilteredUsers() {
+      const searchTerm = this.searchTerm.toLowerCase();
+      let filteredUsers = [...this.users];
+      if (searchTerm != '') {
+         filteredUsers = filteredUsers.filter((user) => user.name.toLowerCase().includes(searchTerm));
+      } 
       const order = this.sortOrder === 'asc' ? 1 : -1;
-      return [...this.users].sort((a, b) => (a[this.sortField] > b[this.sortField] ? order : -order));
+      return filteredUsers.sort((a, b) => (a[this.sortField] > b[this.sortField] ? order : -order));
     },
 
     async updatePoints(index, point) {
       const user = this.sortedUsers[index];
       user.points += point;
-      router.put('/update', {
+      router.put('/api/update', {
         userId: user.id,
         points: user.points,
       });
     },
 
-    filterByName() {
-      this.sortedUsers = this.sortUsers().filter((user) => user.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
-    },
-
     async deleteUser (user) {
       let userId = user.id;
       if (confirm('Are you sure you want to delete user "' + user.name + '"?')) {
-        router.delete(`/users/${userId}`, {
+        router.delete(`/api/delete/${userId}`, {
           onSuccess: () => {
             const index = this.users.findIndex((user) => user.id === userId);
             if (index !== -1) {
@@ -125,7 +125,6 @@ export default {
           },
           onError: (errors) => {
             error.value = errors;
-            console.log(errors);
           },
         });
       }
@@ -142,7 +141,7 @@ export default {
 
     async handleAddUser(newUser) {
       try {
-        router.post('/users', newUser, {
+        router.post('/api/user', newUser, {
           onSuccess: () => {
             this.showAddUserModal = false;
 	        },

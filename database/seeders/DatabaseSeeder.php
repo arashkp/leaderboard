@@ -13,6 +13,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+
+        User::create([
+            'name' => 'Arash',
+            'age' => 50,
+            'points' => 58,
+            'address' => '985 Jervis Street, Vancouver',
+        ]);
+
+        
+        User::create([
+            'name' => 'Olivia',
+            'age' => 40,
+            'points' => 46,
+            'address' => '785 Hastings Street, Vancouver',
+        ]);
+
+        User::create([
+            'name' => 'James',
+            'age' => 35,
+            'points' => 37,
+            'address' => '42895 Nootka Street, Vancouver',
+        ]);
+
         User::create([
             'name' => 'Forth',
             'age' => 30,
@@ -27,18 +50,6 @@ class DatabaseSeeder extends Seeder
             'address' => '4904 Robson St, Vancouver',
         ]);
 
-        User::create([
-            'name' => 'James',
-            'age' => 35,
-            'points' => 17,
-            'address' => '42895 Nootka Street, Vancouver',
-        ]);
 
-        User::create([
-            'name' => 'Olivia',
-            'age' => 40,
-            'points' => 5,
-            'address' => '785 Hastings Street, Vancouver',
-        ]);
     }
 }

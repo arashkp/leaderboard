@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [UserController::class, 'index'])->name('index');
-Route::put('/update', [UserController::class, 'update'])->name('update');
-Route::post('/users', [UserController::class, 'store'])->name('store');
-Route::delete('/users/{user}', [UserController::class, 'delete'])->name('delete');
+Route::get('/api/users', [UserController::class, 'users'])->name('users');
+Route::post('/api/user', [UserController::class, 'store'])->name('store');
+Route::put('/api/update', [UserController::class, 'update'])->name('update');
+Route::delete('/api/delete/{user}', [UserController::class, 'delete'])->name('delete');

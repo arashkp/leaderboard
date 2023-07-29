@@ -7,12 +7,18 @@ use App\Models\User;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Routing\Controller as BaseController;
 
-class UserController extends Controller
+class UserController extends BaseController
 {
     public function index()
     {
         return Inertia::render('Leaderboard', ['users' => User::all()->toArray()]);
+    }
+
+    public function users()
+    {
+        return response()->json(UserResource::collection(User::all()));
     }
 
     public function update(Request $request)
@@ -38,16 +44,15 @@ class UserController extends Controller
             'point' => 'required|integer|min:0',
         ]);
 
-        $user = User::create($validatedData);
+        User::create($validatedData);
 
         return redirect()->route('index')->with('success', 'User added successfully');
     }
 
-    public function deleteUser(User $user)
+    public function delete(User $user)
     {
         $user->delete();
-
         return redirect()->route('index')->with('success', 'User removed successfully');
     }
-    
+
 }
