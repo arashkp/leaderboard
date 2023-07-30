@@ -41,6 +41,17 @@ php artisan serve
 	
 The project will be available at http://localhost:8000.
 
+
+### Testing the Application
+This project includes `two simple backend tests` `for testing the page and the API endpoint to get all users. More comprehensive tests can be added for both the backend and frontend sides to ensure robust functionality.
+To run the backend tests, use the following command in your terminal:
+```
+php artisan test
+```
+For the frontend tests, you can `add test cases` and run them with the following npm command:
+```
+npm run test:unit
+```
 ## License
 The Leaderboard app is licensed under the MIT License, enabling anyone to use, modify, and distribute the code without limitations.
 
