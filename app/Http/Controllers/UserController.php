@@ -13,7 +13,8 @@ class UserController extends BaseController
 {
     public function index()
     {
-        return Inertia::render('Leaderboard', ['users' => User::all()->toArray()]);
+        $users = UserResource::collection(User::all());
+        return Inertia::render('Leaderboard', compact('users'));
     }
 
     public function users()
