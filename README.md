@@ -2,7 +2,7 @@
 
 # Leaderboard App
 
-Welcome to the Leaderboard application! This project is my first experience with Inertia, building a dynamic leaderboard app using Laravel 10, Vue JS 3, and Tailwind CSS. Throughout this journey of learning, I have explored the ins and outs of these powerful technologies and built a fully functional leaderboard app.
+Welcome to the Leaderboard single page application (SPA)! This project is my first experience with Inertia, building a dynamic leaderboard app using Laravel 10, Vue JS 3, and Tailwind CSS. Throughout this journey of learning, I have explored the ins and outs of these powerful technologies and built a fully functional leaderboard app.
 
 ## Project Guideline
 
